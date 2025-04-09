@@ -71,6 +71,9 @@ int main()
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), static_cast<float>(SCR_HEIGHT), 0.0f, -1.0f, 1.0f);
     std::string vertexCode = readShaderSource("../src/particle.vs");
     std::string fragmentCode = readShaderSource("../src/particle.fs");
+    
+    /*string csCode = readShaderSource("../src/particle.cs");
+    GLuint csProgarm = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, csCode.c_str());*/
     particleShader.Compile(vertexCode.c_str(), fragmentCode.c_str());
     particleShader.Use();
     particleShader.SetMatrix4("projection", projection);
@@ -78,7 +81,7 @@ int main()
     Texture2D particle_texture,ball_texture;
     particle_texture=ResourceManager::LoadTexture("../resources/textures/particle.png", true, "particle");
     ball_texture=ResourceManager::LoadTexture("../resources/textures/awesomeface.png", true, "face");
-
+    
     ParticleGenerator* particles = new ParticleGenerator(particleShader, particle_texture, 500); // 500¸öÁ£×Ó
     glm::vec2 playerPos = glm::vec2(SCR_WIDTH / 2.0f - PLAYER_SIZE.x / 2.0f, SCR_HEIGHT - PLAYER_SIZE.y);
     glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - 12.5f, -12.5f * 2.0f);
