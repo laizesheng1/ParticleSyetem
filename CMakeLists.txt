@@ -22,7 +22,8 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} )
 
-target_link_libraries(${PROJECT_NAME}  glfw3.lib opengl32.lib)
+target_link_libraries(${PROJECT_NAME}  glew32s.lib glfw3.lib opengl32.lib)
+
 source_group(TREE "${CMAKE_SOURCE_DIR}" FILES ${SOURCE_FILES})
 
 

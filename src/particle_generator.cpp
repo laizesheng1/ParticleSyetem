@@ -127,25 +127,50 @@ ParticleGen::ParticleGen(Shader updateShader, Shader renderShader, Texture2D tex
 void ParticleGen::init()
 {
     // 生成初始粒子数据
-    std::vector<Particle> initialParticles(this->particleCount);
+    std::vector<Particle3D> initialParticles(this->particleCount);
     for (auto& p : initialParticles)
     {
-        p.Position = glm::vec2(0.0f);
-        p.Velocity = glm::vec2(0.0f);
-        p.Color = glm::vec4(1.0f);
-        p.Life = 0.0f;
+        glm::vec3 vec;
+        vec.x = (rand() % 2000) / (500.0);
+        vec.y = (rand() % 2000) / (500.0);
+        vec.z = (rand() % 2000) / (500.0);
+        p.Position = vec;
+
+        vec.x = (rand() % 100) / 500.0 - (rand() % 100) / 500.0;
+        vec.y = (rand() % 100) / 500.0 - (rand() % 100) / 500.0;
+        vec.z = (rand() % 100) / 500.0 - (rand() % 100) / 500.0;
+        p.Velocity = glm::vec4(vec, 0.0);
+           
+        vec.x = (rand() % 500) / 30.0 - (rand() % 500) / 30.0;
+        vec.y = (rand() % 500) / 30.0 - (rand() % 500) / 30.0;
+        vec.z = (rand() % 500) / 30.0 - (rand() % 500) / 30.0;
+        p.Attractors = glm::vec4(vec, 0.0);
+            
+        p.Life = rand() / (double)RAND_MAX;
     }
 
     glGenBuffers(1, &this->particleSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->particleSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * this->particleCount, initialParticles.data(), GL_DYNAMIC_DRAW);
-    std::cout << "SSBO id: " << particleSSBO << std::endl;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle3D) * this->particleCount, initialParticles.data(), GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
+    std::cout << "SSBO id: " << particleSSBO << std::endl;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-    // 一个空VAO，用来实例化绘制
+    glGenBuffers(1, &this->particleVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Particle3D) * this->particleCount, initialParticles.data(), GL_DYNAMIC_DRAW);
     glGenVertexArrays(1, &this->quadVAO);
     glBindVertexArray(this->quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
+
+    // 位置 Position: vec3, location = 0
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle3D), (void*)offsetof(Particle3D, Position));
+
+    // 生命 Life: float, location = 1
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(Particle3D), (void*)offsetof(Particle3D, Life));
+
     glBindVertexArray(0);
 }
 
@@ -155,19 +180,23 @@ void ParticleGen::Update(float dt)
     this->updateShader.SetFloat("dt", dt);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
     glDispatchCompute((this->particleCount + 255) / 256, 1, 1);
-    std::cout << "particleCount is " << particleCount << std::endl;
-    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 void ParticleGen::Draw()
 {
     this->renderShader.Use();
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
+    //this->texture.Bind();
+    //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
 
+    // 将Compute Shader更新后的SSBO同步拷贝到绘制用VBO
+    glBindBuffer(GL_COPY_READ_BUFFER, this->particleSSBO);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, this->particleVBO);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(Particle3D) * this->particleCount);
+
+    // 绘制
     glBindVertexArray(this->quadVAO);
-    glDrawArraysInstanced(GL_POINTS, 0, 1, this->particleCount);
+    glDrawArrays(GL_POINTS, 0, this->particleCount);
     glBindVertexArray(0);
 }
 

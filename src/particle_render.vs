@@ -1,24 +1,13 @@
 #version 430 core
 
-struct Particle {
-    vec2 Position;
-    vec2 Velocity;
-    vec4 Color;
-    float Life;
-};
+layout (location = 0) in vec3 vertPos;
+layout (location = 1) in float life;
 
-layout(std430, binding = 0) buffer ParticleBuffer {
-    Particle particles[];
-};
+uniform mat4 view, projection; 
 
-out vec4 ParticleColor;
+out float color;
 
-uniform mat4 projection;
-
-void main()
-{
-    Particle p = particles[gl_InstanceID];
-    gl_Position = projection * vec4(p.Position, 0.0, 1.0);
-    gl_PointSize = 2.0;
-    ParticleColor = p.Color;
+void main(){ 
+	color = life;
+	gl_Position =  projection * view * vec4(vertPos, 1.0);
 }

@@ -16,9 +16,9 @@ public:
     Shader() { }
     // sets the current shader as active
     Shader  &Use();
-    // compiles the shader from given source code
+    void    CompileComputeShader(const char* computeSource);
     void    Compile(const char *vertexSource, const char *fragmentSource, const char *geometrySource = nullptr);
-    void CompileComputeShader(const char* computeSource);
+
     void    SetFloat    (const char *name, float value, bool useShader = false);
     void    SetInteger  (const char *name, int value, bool useShader = false);
     void    SetVector2f (const char *name, float x, float y, bool useShader = false);
