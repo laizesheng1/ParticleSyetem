@@ -117,3 +117,58 @@ void ParticleGenerator::respawnParticle(Particle &particle, BallObject&object, g
     else particle.Velocity = object.Velocity * 0.1f;
 }
 
+ParticleGen::ParticleGen(Shader updateShader, Shader renderShader, Texture2D texture, unsigned int amount)
+    : updateShader(updateShader), renderShader(renderShader), texture(texture), amount(amount)
+{
+    this->particleCount = amount;
+    this->init();
+}
+
+void ParticleGen::init()
+{
+    // 生成初始粒子数据
+    std::vector<Particle> initialParticles(this->particleCount);
+    for (auto& p : initialParticles)
+    {
+        p.Position = glm::vec2(0.0f);
+        p.Velocity = glm::vec2(0.0f);
+        p.Color = glm::vec4(1.0f);
+        p.Life = 0.0f;
+    }
+
+    glGenBuffers(1, &this->particleSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->particleSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * this->particleCount, initialParticles.data(), GL_DYNAMIC_DRAW);
+    std::cout << "SSBO id: " << particleSSBO << std::endl;
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    // 一个空VAO，用来实例化绘制
+    glGenVertexArrays(1, &this->quadVAO);
+    glBindVertexArray(this->quadVAO);
+    glBindVertexArray(0);
+}
+
+void ParticleGen::Update(float dt)
+{
+    this->updateShader.Use();
+    this->updateShader.SetFloat("dt", dt);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
+    glDispatchCompute((this->particleCount + 255) / 256, 1, 1);
+    std::cout << "particleCount is " << particleCount << std::endl;
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+}
+
+void ParticleGen::Draw()
+{
+    this->renderShader.Use();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->particleSSBO);
+
+    glBindVertexArray(this->quadVAO);
+    glDrawArraysInstanced(GL_POINTS, 0, 1, this->particleCount);
+    glBindVertexArray(0);
+}
+
+

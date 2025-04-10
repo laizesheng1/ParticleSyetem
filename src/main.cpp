@@ -72,11 +72,13 @@ int main()
     std::string vertexCode = readShaderSource("../src/particle.vs");
     std::string fragmentCode = readShaderSource("../src/particle.fs");
     
-    /*string csCode = readShaderSource("../src/particle.cs");
-    GLuint csProgarm = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, csCode.c_str());*/
+    //string csCode = readShaderSource("../src/particle.cs");
+    //GLuint csProgarm = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, csCode.c_str());
+
     particleShader.Compile(vertexCode.c_str(), fragmentCode.c_str());
     particleShader.Use();
     particleShader.SetMatrix4("projection", projection);
+
     // 创建粒子系统
     Texture2D particle_texture,ball_texture;
     particle_texture=ResourceManager::LoadTexture("../resources/textures/particle.png", true, "particle");
@@ -86,6 +88,17 @@ int main()
     glm::vec2 playerPos = glm::vec2(SCR_WIDTH / 2.0f - PLAYER_SIZE.x / 2.0f, SCR_HEIGHT - PLAYER_SIZE.y);
     glm::vec2 ballPos = playerPos + glm::vec2(PLAYER_SIZE.x / 2.0f - 12.5f, -12.5f * 2.0f);
     auto Ball = new BallObject(ballPos, 12.5f, glm::vec2(100.0f, -350.0f), ball_texture);
+
+    /*Shader updateShader;
+    updateShader.CompileComputeShader(readShaderSource("../src/particle.cs").c_str());
+    Shader renderShader;
+    renderShader.Compile(
+        readShaderSource("../src/particle_render.vs").c_str(),
+        readShaderSource("../src/particle_render.fs").c_str()
+    );
+    renderShader.Use();
+    renderShader.SetMatrix4("projection", projection);
+    ParticleGen* particles = new ParticleGen(updateShader, renderShader, particle_texture, 100000);*/
     // 渲染循环
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
@@ -106,11 +119,12 @@ int main()
         {
             particles->Update(0.0f, *Ball, 100, glm::vec2(Ball->Radius / 2.0f));
         }
-        //particles->Update(deltaTime, ballPos, glm::vec2(100.0f, -350.0f),2, glm::vec2(12.5f / 2.0f));
+        //particles->Update(deltaTime);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 绘制粒子
+
         particles->Draw();
         glfwSwapBuffers(window);       
     }    

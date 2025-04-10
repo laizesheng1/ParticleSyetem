@@ -1,23 +1,27 @@
 #version 430 core
-layout(location = 0) in vec2 dummy; // 不用，实例化绘制
 
-layout(std430, binding = 0) buffer ParticleBuffer {
-    struct Particle {
-        vec2 Position;
-        vec2 Velocity;
-        vec4 Color;
-        float Life;
-    };
-    Particle particles[];
+struct Particle {
+    vec2 Position;
+    vec2 Velocity;
+    vec4 Color;
+    float Life;
 };
 
-out vec4 ParticleColor;
-uniform mat4 projection;
+layout(std430, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+layout (local_size_x = 256) in;
+
+uniform float dt;
 
 void main()
 {
-    Particle p = particles[gl_InstanceID];
-    gl_Position = projection * vec4(p.Position, 0.0, 1.0);
-    gl_PointSize = 2.0;
-    ParticleColor = p.Color;
+    uint id = gl_GlobalInvocationID.x;
+    particles[id].Life -= dt;
+
+    if (particles[id].Life > 0.0)
+    {
+        particles[id].Position -= particles[id].Velocity * dt;
+        particles[id].Color.a -= dt * 2.5f;
+    }
 }

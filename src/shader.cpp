@@ -43,6 +43,38 @@ void Shader::Compile(const char* vertexSource, const char* fragmentSource, const
         glDeleteShader(gShader);
 }
 
+void Shader::CompileComputeShader(const char* computeSource)
+{
+    unsigned int sCompute;
+
+    sCompute = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(sCompute, 1, &computeSource, NULL);
+    glCompileShader(sCompute);
+
+    int success;
+    glGetShaderiv(sCompute, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        char infoLog[512];
+        glGetShaderInfoLog(sCompute, 512, NULL, infoLog);
+        std::cout << "ERROR::COMPUTE_SHADER_COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    this->ID = glCreateProgram();
+    glAttachShader(this->ID, sCompute);
+    glLinkProgram(this->ID);
+
+    glGetProgramiv(this->ID, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        char infoLog[512];
+        glGetProgramInfoLog(this->ID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER_PROGRAM_LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+    glDeleteShader(sCompute);
+}
+
 void Shader::SetFloat(const char *name, float value, bool useShader)
 {
     if (useShader)
