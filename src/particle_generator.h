@@ -19,8 +19,10 @@ struct Particle {
 struct Particle3D
 {
     glm::vec3 Position;
+    float padding1;
     glm::vec4 Velocity, Attractors;
     float Life;
+    float padding[3];
 };
 
 class ParticleGenerator

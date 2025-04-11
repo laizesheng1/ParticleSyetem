@@ -131,9 +131,9 @@ void ParticleGen::init()
     for (auto& p : initialParticles)
     {
         glm::vec3 vec;
-        vec.x = (rand() % 2000) / (500.0);
-        vec.y = (rand() % 2000) / (500.0);
-        vec.z = (rand() % 2000) / (500.0);
+        vec.x = (rand() % 2000 - 1000) / (500.0);
+        vec.y = (rand() % 2000 - 1000) / (500.0);
+        vec.z = (rand() % 2000 - 1000) / (500.0);
         p.Position = vec;
 
         vec.x = (rand() % 100) / 500.0 - (rand() % 100) / 500.0;

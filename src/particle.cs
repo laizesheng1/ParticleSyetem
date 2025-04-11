@@ -55,10 +55,10 @@ void main()
 	Particle3D p=particles[index];
 	
 	vec3 forcePoint = vec3(0);
-    forcePoint = particles[index].Attractors.xyz*32;
-    // for (i = 0; i < 32; i++) {
-    //     forcePoint += particles[index].Attractors.xyz;
-    // }	
+    //forcePoint = particles[index].Attractors.xyz*32;
+    for (i = 0; i < 32; i++) {
+        forcePoint += particles[i].Attractors.xyz;
+    }	
 	
 	// Read the current position and velocity from the buffers
 	vec4 vel = p.Velocity;
