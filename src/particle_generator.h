@@ -55,7 +55,8 @@ private:
 class ParticleGen
 {
 public:
-    ParticleGen(Shader updateShader, Shader renderShader, Texture2D texture, unsigned int amount);
+    ParticleGen(Shader updateShader, Shader renderShader, Texture2D texture, unsigned int amount, Camera camera);
+    void Update(float dt, float time);
     void Update(float dt);
     void Draw();
 private:
@@ -68,7 +69,7 @@ private:
     GLuint quadVAO;
     GLuint particleVBO;
     void init();
-
+    std::vector<Particle3D> initialParticles;
 };
 
 #endif

@@ -13,6 +13,7 @@ layout(std430, binding = 0) buffer ParticleBuffer {
 layout (local_size_x = 256) in;
 
 uniform float dt;
+uniform vec3 vec;
 
 highp float rand(vec2 co)
 {
@@ -55,7 +56,9 @@ void main()
 	Particle3D p=particles[index];
 	
 	vec3 forcePoint = vec3(0);
-    //forcePoint = particles[index].Attractors.xyz*32;
+
+    particles[index].Attractors = vec4(vec, 0.0f);
+
     for (i = 0; i < 32; i++) {
         forcePoint += particles[i].Attractors.xyz;
     }	

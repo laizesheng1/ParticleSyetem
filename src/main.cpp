@@ -16,12 +16,18 @@ const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 const glm::vec2 PLAYER_SIZE(100.0f, 20.0f);
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
 
-// 回调函数
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 // 辅助函数：从文件加载shader源码
 std::string readShaderSource(const char* filePath)
@@ -93,27 +99,36 @@ int main()
         readShaderSource("../src/particle_render.vs").c_str(),
         readShaderSource("../src/particle_render.fs").c_str()
     );
+    glm::mat4 projection = {
+        0.562500f,0.000000f, 0.000000f, 0.000000f,
+        0.000000f,1.000000f, 0.000000f, 0.000000f,
+        0.000000f,0.000000f, -1.000100f, -1.000000f,
+        0.000000f,0.000000f, -1.000050f,0.000000f,
+
+    };
+    glm::mat4 view = {
+        0.831538f,0.269314f, -0.485813f, 0.000000f,
+        0.000000f,0.874601f, 0.484843f, 0.000000f,
+        0.555468f,-0.403165f, 0.727264f, 0.000000f,
+        0.000000f,-0.000004f, -103.126190f, 1.000000f,
+    };
     renderShader.Use();
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f),(float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 100.0f);
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+    //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, -0.1f, 100.0f);
+    //glm::mat4 view = camera.GetViewMatrix();
     renderShader.SetMatrix4("projection", projection);
     renderShader.SetMatrix4("view", view);
-    ParticleGen* particles = new ParticleGen(updateShader, renderShader, particle_texture, 1000000);
+    ParticleGen* particles = new ParticleGen(updateShader, renderShader, particle_texture, 1000000,camera);
     // 渲染循环
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(window))
     {
-        glfwPollEvents();
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         // 输入
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+        processInput(window);
+        /*if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);*/
 
         // 渲染
         /*Ball->Move(deltaTime, SCR_WIDTH,SCR_HEIGHT);
@@ -122,17 +137,66 @@ int main()
         {
             particles->Update(0.0f, *Ball, 100, glm::vec2(Ball->Radius / 2.0f));
         }*/
-        
+        particles->Update(deltaTime, lastFrame);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 绘制粒子
-        particles->Update(deltaTime);
+        
         particles->Draw();
-        glfwSwapBuffers(window);       
+        glfwSwapBuffers(window);   
+        glfwPollEvents();
     }    
     //ResourceManager::Clear();
     delete particles;
     glfwTerminate();
     return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void processInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
