@@ -6,7 +6,7 @@
 #include "texture.h"
 #include "shader.h"
 
-class SpriteRenderer
+
 {
 public:
     // Constructor (inits shaders/shapes)
