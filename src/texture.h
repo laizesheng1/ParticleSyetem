@@ -39,6 +39,8 @@ public:
     static std::map<std::string, Texture2D> Textures;
     static Texture2D LoadTexture(const char* file, bool alpha, std::string name);
     static Texture2D GetTexture(std::string name);
+    static std::string readShaderSource(const char* filePath);
+
     static void      Clear();
 private:
     ResourceManager() { }

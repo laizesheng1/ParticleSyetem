@@ -46,6 +46,21 @@ Texture2D ResourceManager::GetTexture(std::string name)
     return Textures[name];
 }
 
+std::string ResourceManager::readShaderSource(const char* filePath)
+{   
+    std::ifstream shaderFile;
+    std::stringstream shaderStream;
+    shaderFile.open(filePath);
+    if (shaderFile.fail())
+    {
+        std::cerr << "Failed to load shader: " << filePath << std::endl;
+        exit(-1);
+    }
+    shaderStream << shaderFile.rdbuf();
+    shaderFile.close();
+    return shaderStream.str();
+}
+
 Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 {
     // create texture object

@@ -28,23 +28,18 @@ struct Particle3D
 class ParticleGenerator
 {
 public:
-    // constructor
+
     ParticleGenerator(Shader shader, Texture2D texture, unsigned int amount);
     // update all particles
     void Update(float dt, BallObject&object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
-    void Update(float dt, GameObject& object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
     // render all particles
     void Draw();
     std::vector<Particle> particles;
 private:
-    // state   
     unsigned int amount;
-    // render state
     Shader shader;
     Texture2D texture;
     unsigned int VAO;
-
-    // initializes buffer and vertex attributes
     void init();
     // returns the first Particle index that's currently unused e.g. Life <= 0.0f or 0 if no particle is currently inactive
     unsigned int firstUnusedParticle();
@@ -55,17 +50,15 @@ private:
 class ParticleGen
 {
 public:
-    ParticleGen(Shader updateShader, Shader renderShader, Texture2D texture, unsigned int amount, Camera camera);
+    ParticleGen(Shader updateShader, Shader renderShader, unsigned int amount);
     void Update(float dt, float time);
-    void Update(float dt);
     void Draw();
 private:
     Texture2D texture;
-    unsigned int amount;
     GLuint particleSSBO;
     unsigned int particleCount;
-    Shader updateShader;  // 新增：Compute Shader
-    Shader renderShader;  // 新增：渲染用Shader
+    Shader updateShader;
+    Shader renderShader;
     GLuint quadVAO;
     GLuint particleVBO;
     void init();
